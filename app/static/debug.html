@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>调试 - 私人营养师</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/pinia@2/dist/pinia.iife.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">前端调试信息</h1>
+
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">依赖加载状态</h2>
+            <ul class="space-y-2">
+                <li><span id="vue-status" class="px-3 py-1 rounded text-white">检查中...</span> Vue 3</li>
+                <li><span id="pinia-status" class="px-3 py-1 rounded text-white">检查中...</span> Pinia</li>
+                <li><span id="axios-status" class="px-3 py-1 rounded text-white">检查中...</span> Axios</li>
+                <li><span id="tailwind-status" class="px-3 py-1 rounded text-white">检查中...</span> Tailwind CSS</li>
+            </ul>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">API 连接测试</h2>
+            <button onclick="testAPI()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+                测试 API 连接
+            </button>
+            <div id="api-result" class="mt-4 p-4 bg-gray-100 rounded hidden">
+                <pre id="api-output"></pre>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-bold mb-4">控制台日志</h2>
+            <div id="console-log" class="bg-gray-900 text-green-400 p-4 rounded font-mono text-sm h-64 overflow-y-auto">
+                <div>初始化中...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 重定向 console.log
+        const logContainer = document.getElementById('console-log');
+        const originalLog = console.log;
+        const originalError = console.error;
+
+        function addLog(message, type = 'log') {
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? 'text-red-400' : 'text-green-400';
+            const line = document.createElement('div');
+            line.className = color;
+            line.textContent = `[${timestamp}] ${message}`;
+            logContainer.appendChild(line);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        console.log = function(...args) {
+            originalLog(...args);
+            addLog(args.join(' '), 'log');
+        };
+
+        console.error = function(...args) {
+            originalError(...args);
+            addLog(args.join(' '), 'error');
+        };
+
+        // 检查依赖
+        function checkDependencies() {
+            const checks = [
+                { id: 'vue-status', name: 'Vue', obj: window.Vue },
+                { id: 'pinia-status', name: 'Pinia', obj: window.Pinia },
+                { id: 'axios-status', name: 'axios', obj: window.axios },
+                { id: 'tailwind-status', name: 'Tailwind', obj: document.querySelector('script[src*="tailwindcss"]') }
+            ];
+
+            checks.forEach(check => {
+                const element = document.getElementById(check.id);
+                if (check.obj) {
+                    element.textContent = '✅';
+                    element.className = 'px-3 py-1 rounded text-white bg-green-500';
+                    console.log(`✅ ${check.name} 已加载`);
+                } else {
+                    element.textContent = '❌';
+                    element.className = 'px-3 py-1 rounded text-white bg-red-500';
+                    console.error(`❌ ${check.name} 未加载`);
+                }
+            });
+        }
+
+        // 测试 API
+        async function testAPI() {
+            const resultDiv = document.getElementById('api-result');
+            const output = document.getElementById('api-output');
+            resultDiv.classList.remove('hidden');
+            output.textContent = '测试中...';
+
+            try {
+                const response = await axios.post('/api/v1/chat', {
+                    message: '你好',
+                    thread_id: 'debug_test'
+                });
+                output.textContent = JSON.stringify(response.data, null, 2);
+                console.log('✅ API 连接成功');
+            } catch (error) {
+                output.textContent = `错误: ${error.message}\n${JSON.stringify(error.response?.data, null, 2)}`;
+                console.error('❌ API 连接失败:', error);
+            }
+        }
+
+        // 页面加载完成后检查
+        window.addEventListener('load', () => {
+            console.log('页面加载完成');
+            checkDependencies();
+        });
+
+        // 立即检查
+        checkDependencies();
+    </script>
+</body>
+</html>

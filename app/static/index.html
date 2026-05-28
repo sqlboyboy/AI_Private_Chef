@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>私人营养师 - AI 食材分析</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: white;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .header button:hover {
+            background: #45a049;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+            align-items: flex-end;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-avatar {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+
+        .message.user .message-content {
+            background: #2196F3;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.ai .message-content {
+            background: #f0f0f0;
+            color: #333;
+            border-bottom-left-radius: 4px;
+        }
+
+        .input-area {
+            border-top: 1px solid #e0e0e0;
+            background: white;
+            padding: 12px 16px;
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .input-area input:focus {
+            outline: none;
+            border-color: #2196F3;
+            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.1);
+        }
+
+        .input-area button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .input-area button:hover {
+            background: #1976D2;
+        }
+
+        .input-area button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .input-area .icon-button {
+            background: #f0f0f0;
+            color: #666;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+        }
+
+        .input-area .icon-button:hover {
+            background: #e8e8e8;
+            color: #333;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .image-preview {
+            max-width: 100px;
+            max-height: 100px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            position: relative;
+        }
+
+        .image-preview-container {
+            margin-bottom: 8px;
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+        }
+
+        .image-preview-item {
+            position: relative;
+            display: inline-block;
+        }
+
+        .image-preview-item img {
+            max-width: 80px;
+            max-height: 80px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .image-preview-item .remove-btn {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .image-preview-item .remove-btn:hover {
+            background: #cc0000;
+        }
+
+        [v-cloak] {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" v-cloak>
+        <div class="header">
+            <h1>
+                <span>🍽️</span>
+                <span>私人营养师</span>
+            </h1>
+            <button onclick="clearHistory()">清空记录</button>
+        </div>
+
+        <div class="messages" id="messages">
+            <div class="empty-state">
+                <div class="empty-state-icon">🍽️</div>
+                <p>开始对话，我来帮你分析食材</p>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <button class="icon-button" onclick="document.getElementById('fileInput').click()" title="上传图片">
+                📎
+            </button>
+            <input
+                type="file"
+                id="fileInput"
+                class="file-input"
+                accept="image/*"
+                onchange="handleFileSelect(event)"
+            >
+            <input
+                type="text"
+                id="messageInput"
+                placeholder="请输入消息..."
+                onkeypress="handleKeyPress(event)"
+            >
+            <button onclick="sendMessage()">发送</button>
+        </div>
+
+        <div id="imagePreviewContainer" class="image-preview-container" style="display: none; padding: 0 16px;">
+        </div>
+    </div>
+
+    <!-- 加载依赖 -->
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+    <script>
+        console.log('=== 页面初始化 ===');
+
+        // 简单的消息管理
+        let messages = [];
+        let threadId = 'thread_' + Date.now();
+        let selectedFiles = [];
+
+        function addMessage(type, content) {
+            messages.push({ type, content, timestamp: new Date() });
+            renderMessages();
+        }
+
+        function renderMessages() {
+            const messagesDiv = document.getElementById('messages');
+            if (messages.length === 0) {
+                messagesDiv.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🍽️</div>
+                        <p>开始对话，我来帮你分析食材</p>
+                    </div>
+                `;
+                return;
+            }
+
+            messagesDiv.innerHTML = messages.map(msg => {
+                const avatar = msg.type === 'user' ? '👤' : '🥗';
+                return `
+                    <div class="message ${msg.type}">
+                        ${msg.type === 'ai' ? `<div class="message-avatar">${avatar}</div>` : ''}
+                        <div class="message-content">${escapeHtml(msg.content)}</div>
+                        ${msg.type === 'user' ? `<div class="message-avatar">${avatar}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            // 滚动到底部
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 文件上传处理
+        function handleFileSelect(event) {
+            try {
+                const files = event.target.files;
+                if (files.length === 0) return;
+
+                selectedFiles = Array.from(files);
+                updateImagePreview();
+                console.log('✓ 文件选择成功:', selectedFiles.length, '个文件');
+            } catch (error) {
+                console.error('✗ 文件选择失败:', error);
+            }
+        }
+
+        function updateImagePreview() {
+            try {
+                const container = document.getElementById('imagePreviewContainer');
+
+                if (selectedFiles.length === 0) {
+                    container.style.display = 'none';
+                    container.innerHTML = '';
+                    return;
+                }
+
+                container.style.display = 'flex';
+                container.innerHTML = selectedFiles.map((file, index) => {
+                    const reader = new FileReader();
+
+                    reader.onload = (e) => {
+                        const item = container.querySelector(`[data-index="${index}"]`);
+                        if (item) {
+                            const img = item.querySelector('img');
+                            if (img) {
+                                img.src = e.target.result;
+                            }
+                        }
+                    };
+
+                    reader.onerror = (e) => {
+                        console.error('✗ 读取文件失败:', e);
+                    };
+
+                    reader.readAsDataURL(file);
+
+                    return `
+                        <div class="image-preview-item" data-index="${index}">
+                            <img src="" alt="预览">
+                            <button class="remove-btn" onclick="removeFile(${index})">×</button>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('✗ 更新预览失败:', error);
+            }
+        }
+
+        function removeFile(index) {
+            try {
+                selectedFiles.splice(index, 1);
+                updateImagePreview();
+                console.log('✓ 文件删除成功');
+            } catch (error) {
+                console.error('✗ 文件删除失败:', error);
+            }
+        }
+
+        // 上传文件到 OSS（通过后端代理）
+        async function uploadFileToOSS(file) {
+            try {
+                console.log('📤 开始上传文件:', file.name);
+
+                // 创建 FormData
+                const formData = new FormData();
+                formData.append('file', file);
+
+                console.log('📤 上传到后端:', '/api/v1/upload');
+
+                // 上传到后端，由后端代理上传到 OSS
+                const uploadResponse = await axios.post('/api/v1/upload', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+
+                // 返回文件 URL
+                const fileUrl = uploadResponse.data.file_url;
+                console.log('✓ 文件上传成功:', fileUrl);
+                return fileUrl;
+            } catch (error) {
+                console.error('✗ 文件上传失败:', error.message);
+                throw error;
+            }
+        }
+
+        async function sendMessage() {
+            try {
+                const input = document.getElementById('messageInput');
+                const message = input.value.trim();
+
+                if (!message && selectedFiles.length === 0) {
+                    console.log('⚠️ 消息和文件都为空');
+                    return;
+                }
+
+                console.log('📨 发送消息...');
+
+                // 添加用户消息
+                addMessage('user', message || '(已上传图片)');
+                input.value = '';
+
+                // 禁用输入
+                input.disabled = true;
+                const sendBtn = document.querySelector('.input-area button:last-child');
+                if (sendBtn) {
+                    sendBtn.disabled = true;
+                }
+
+                let imageUrl = null;
+
+                // 如果有选中的文件，先上传
+                if (selectedFiles.length > 0) {
+                    console.log('📤 上传文件...');
+                    imageUrl = await uploadFileToOSS(selectedFiles[0]);
+                    console.log('✅ 文件上传成功:', imageUrl);
+                    selectedFiles = [];
+                    updateImagePreview();
+                }
+
+                // 调用 API
+                console.log('📤 调用 Chat API...');
+                const payload = {
+                    message: message || '请分析这张图片',
+                    thread_id: threadId
+                };
+
+                if (imageUrl) {
+                    payload.image_url = imageUrl;
+                }
+
+                console.log('📤 请求数据:', payload);
+
+                const response = await axios.post('/api/v1/chat', payload);
+
+                console.log('✓ API 响应成功');
+                console.log('API 响应:', response.data);
+
+                // 添加 AI 消息 - 使用新的 message 字段
+                if (response.data.message) {
+                    addMessage('ai', response.data.message);
+                } else {
+                    console.warn('⚠️ 响应中没有 message 字段');
+                    addMessage('ai', '抱歉，我无法处理您的请求。');
+                }
+            } catch (error) {
+                console.error('❌ 发送消息失败:', error);
+                const errorMsg = error.response?.data?.detail || error.message || '未知错误';
+                addMessage('ai', '抱歉，发生了错误: ' + errorMsg);
+            } finally {
+                const input = document.getElementById('messageInput');
+                input.disabled = false;
+                const sendBtn = document.querySelector('.input-area button:last-child');
+                if (sendBtn) {
+                    sendBtn.disabled = false;
+                }
+                input.focus();
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function clearHistory() {
+            if (confirm('确定要清空对话历史吗？')) {
+                messages = [];
+                threadId = 'thread_' + Date.now();
+                renderMessages();
+                console.log('✓ 对话历史已清空');
+            }
+        }
+
+        // 初始化
+        console.log('✓ 页面已加载');
+        console.log('✓ Thread ID:', threadId);
+    </script>
+</body>
+</html>

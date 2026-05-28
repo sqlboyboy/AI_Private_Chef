@@ -1,0 +1,82 @@
+# 环境变量文件
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# 虚拟环境
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+*.iml
+
+# 测试和缓存
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+
+# 日志文件
+*.log
+*.log.*
+
+# 数据库
+*.sqlite
+*.sqlite3
+*.db
+identifier.sqlite
+
+# LangGraph 相关
+.langgraph_api/
+
+# 依赖锁定文件（可选，如果想共享锁定版本则删除）
+# uv.lock
+
+# 操作系统
+Thumbs.db
+.DS_Store
+
+# 其他敏感信息
+.credentials
+credentials.json
+secrets.json
+config.local.json
+
+# 临时文件
+*.tmp
+*.temp
+.tmp/

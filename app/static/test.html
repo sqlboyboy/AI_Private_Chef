@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试页面</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .test { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .pass { background: #d4edda; }
+        .fail { background: #f8d7da; }
+    </style>
+</head>
+<body>
+    <h1>前端测试页面</h1>
+    <div id="results"></div>
+
+    <script>
+        const results = document.getElementById('results');
+
+        function test(name, fn) {
+            try {
+                fn();
+                const div = document.createElement('div');
+                div.className = 'test pass';
+                div.textContent = '✓ ' + name;
+                results.appendChild(div);
+                console.log('✓', name);
+            } catch (e) {
+                const div = document.createElement('div');
+                div.className = 'test fail';
+                div.textContent = '✗ ' + name + ': ' + e.message;
+                results.appendChild(div);
+                console.error('✗', name, e);
+            }
+        }
+
+        // 测试 1: 检查 CDN 加载
+        test('Tailwind CSS CDN', () => {
+            const style = document.querySelector('style[data-tailwind]');
+            if (!style && !window.tailwindcss) {
+                // Tailwind 通过 script 标签加载，检查是否有样式
+                const hasStyles = document.styleSheets.length > 0;
+                if (!hasStyles) throw new Error('No stylesheets loaded');
+            }
+        });
+
+        // 测试 2: 加载 Vue
+        test('Vue 3 加载', () => {
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/vue@3/dist/vue.global.js';
+            script.onload = () => {
+                if (!window.Vue) throw new Error('Vue not loaded');
+                test('Vue 3 可用', () => {
+                    if (typeof Vue.createApp !== 'function') throw new Error('createApp not found');
+                });
+            };
+            script.onerror = () => {
+                throw new Error('Failed to load Vue');
+            };
+            document.head.appendChild(script);
+        });
+
+        // 测试 3: 加载 Pinia
+        test('Pinia 加载', () => {
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/pinia@2/dist/pinia.iife.js';
+            script.onload = () => {
+                if (!window.Pinia) throw new Error('Pinia not loaded');
+                test('Pinia 可用', () => {
+                    if (typeof Pinia.createPinia !== 'function') throw new Error('createPinia not found');
+                });
+            };
+            script.onerror = () => {
+                throw new Error('Failed to load Pinia');
+            };
+            document.head.appendChild(script);
+        });
+
+        // 测试 4: 加载 axios
+        test('axios 加载', () => {
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/axios/dist/axios.min.js';
+            script.onload = () => {
+                if (!window.axios) throw new Error('axios not loaded');
+                test('axios 可用', () => {
+                    if (typeof axios.post !== 'function') throw new Error('post method not found');
+                });
+            };
+            script.onerror = () => {
+                throw new Error('Failed to load axios');
+            };
+            document.head.appendChild(script);
+        });
+
+        // 测试 5: 加载本地脚本
+        test('API 脚本加载', () => {
+            const script = document.createElement('script');
+            script.src = '/static/js/api.js';
+            script.onload = () => {
+                if (!window.API) throw new Error('API not loaded');
+                test('API 可用', () => {
+                    if (typeof window.API.sendChatMessage !== 'function') throw new Error('sendChatMessage not found');
+                });
+            };
+            script.onerror = () => {
+                throw new Error('Failed to load API');
+            };
+            document.head.appendChild(script);
+        });
+
+        console.log('测试开始...');
+    </script>
+</body>
+</html>
