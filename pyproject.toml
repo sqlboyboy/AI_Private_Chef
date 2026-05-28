@@ -1,7 +1,7 @@
 [project]
-name = "food-recipe-recommender"
+name = "ai-private-chef"
 version = "0.1.0"
-description = "AI-powered recipe recommender based on uploaded food images"
+description = "AI私厨 - 智能烹饪助手，基于LangChain和LangGraph的AI烹饪推荐系统"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
