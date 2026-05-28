@@ -21,10 +21,12 @@ app = FastAPI(
 )
 
 # 1. 配置跨域资源共享 (CORS)
+# 注意: allow_origins=["*"] 与 allow_credentials=True 不能同时使用
+# 如果需要认证，应明确指定允许的域名
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

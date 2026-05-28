@@ -164,7 +164,7 @@ async def chat_message(request: ChatRequest):
         logger.error(f"❌ Chat API 处理失败: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail=f"处理消息失败: {str(e)}"
+            detail="处理消息失败，请稍后重试"
         )
 
 @router.get("/test")

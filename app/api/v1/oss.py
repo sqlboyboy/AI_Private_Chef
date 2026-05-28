@@ -99,7 +99,10 @@ def generate_oss_signature():
 
     except Exception as e:
         logger.error(f"❌ OSS 签名生成失败: {e}")
-        raise
+        raise HTTPException(
+            status_code=500,
+            detail="签名生成失败，请稍后重试"
+        )
 
 def generate_mock_signature():
     """生成模拟签名（用于开发测试）"""
@@ -149,7 +152,7 @@ async def get_upload_signature():
         logger.error(f"❌ 获取 OSS 签名失败: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"获取上传签名失败: {str(e)}"
+            detail="获取上传签名失败，请稍后重试"
         )
 
 @router.get("/test")
@@ -244,5 +247,5 @@ async def upload_file(file: UploadFile = File(...)):
         logger.error(f"❌ 文件上传失败: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"文件上传失败: {str(e)}"
+            detail="文件上传失败，请稍后重试"
         )

@@ -60,6 +60,9 @@ htmlcov/
 *.db
 identifier.sqlite
 
+# SQLite 数据库目录
+resources/
+
 # LangGraph 相关
 .langgraph_api/
 
